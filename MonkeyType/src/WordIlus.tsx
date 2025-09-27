@@ -1,15 +1,9 @@
-import { useState } from 'react';
+import type { WordIlustrationprops } from './vite-env';
+import { useEffect } from 'react';
 
 
-interface WordIlustrationprops {
-    word: string;
-    wordtyping?: string;
-}
+export default function WordIlustration({ word, wordtyping, goodOnes }: WordIlustrationprops) {
 
-export default function WordIlustration({ word, wordtyping }: WordIlustrationprops) {
-
-
-    const words: string[] = word.split('');
 
 
     const changeColor = (i: number): string => {
@@ -19,20 +13,47 @@ export default function WordIlustration({ word, wordtyping }: WordIlustrationpro
         return "text-red-500"
     }
 
+    const opacityColor = (i: number): string => {
+        if (i < word.length) return "opacity-100";
+        return "opacity-100";
+    }
 
+    const checkGoodOnes = () => {
+        if (word === wordtyping) {
+            goodOnes(prev => prev + 1);
+        }
+    };
 
-
+    useEffect(() => {
+        if (!wordtyping) return;
+        if (word === wordtyping) {
+            goodOnes(prev => prev + 1);
+        }
+    }, [wordtyping]);
 
     return (
         <>
-            <div className='inline-flex h-auto '>
+            <div className='inline-flex flex-col '>
+
                 <div className={`flex`}>
-                    {words.map((w, index) =>
-                        <div className={`flex justify-center items-center content-center px-0.5 text-3xl font-bold m-0 p-0 ${changeColor(index)}`} key={index}>{w}</div>
+                    {word.split('').map((w, index) =>
+                        <div className={`flex justify-center items-center content-center px-0.5 text-3xl font-bold  ${changeColor(index)}`} key={index}>{w}</div>
+                    )}
+                </div>
+
+
+
+                <div className={`flex mt-2 min-h-15`}>
+                    {wordtyping?.split('').map((w, index) =>
+                        <div className={`flex justify-center items-center content-center px-0.5 text-3xl font-bold text-black  ${opacityColor(index)}`} key={index}>{w}</div>
                     )}
                 </div>
 
             </div>
+
+            <div className='w-4'></div>
+
+
         </>
     )
 }
