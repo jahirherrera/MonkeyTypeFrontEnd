@@ -3,7 +3,7 @@ import './App.css'
 import { useEffect, useState } from 'react';
 
 function App() {
-  const arrayofwords: string[] = ["Hello", "word", "this", "is", "monkey", "type", "Hello", "word",
+  const arrayofwords: string[] = ["Hello", "world", "this", "is", "monkey", "type", "Hello", "word",
     "this", "is", "monkey", "type", "Hello", "word", "this", "is", "monkey", "type"
     , "Hello", "word", "this", "is", "monkey", "type", "Hello", "word", "this", "is", "monkey", "type", "Hello", "word", "this", "is", "monkey",
      "monkey", "type", "Hello", "word", "this", "is", "monkey"
@@ -29,31 +29,34 @@ function App() {
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === " " && typing[0].trim() !== " ") {
+    if (e.key === " " && typing[0] !== " ") {
       e.preventDefault();
       setIndex(prev => prev + 1);
     }
+
+    if (e.key === "Backspace" && typing.length === 0 && index > 0) {
+      e.preventDefault();
+      setIndex(prev => prev - 1);
+    }
   }
 
+  
 
   useEffect(() => {
-    setTyping('');
+    setTyping(writing[index] || '');
   }, [index]);
 
-  useEffect(() => {
-    console.log(goodOnes);
-  }, [goodOnes]); 
 
   return (
     <>
-      <div className="grid grid-rows-[1fr_4fr] justify-center items-center content-center h-screen w-full">
+      <div className="grid grid-rows-[1fr_4fr] justify-center items-center content-center h-screen w-full bg-[#212830]">
         <section className='flex justify-center items-center content-center'>
-          <h1 className='text-4xl '>Monkeytype</h1>
+          <h1 className='text-4xl text-[#41ce5c] '>Monkeytype</h1>
         </section>
         <section className='flex flex-wrap justify-center items-center gap-2 mt-20 w-350 h-150  overflow-hidden relative border-2 border-black rounded-lg p-4'>
             {
-              arrayofwords.map((word, index) => (
-                <WordIlustration key={index} word={word} wordtyping={writing[index]} goodOnes={setGoodOnes} />
+              arrayofwords.map((word, i) => (
+                <WordIlustration key={i} word={word} wordtyping={writing[i]} goodOnes={setGoodOnes} isIn={i===index}/>
               ))
             }
 
