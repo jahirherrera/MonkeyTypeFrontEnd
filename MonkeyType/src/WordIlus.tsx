@@ -9,10 +9,15 @@ export default function WordIlustration({ word, wordtyping, goodOnes, isIn }: Wo
 
     const changeColor = (i: number): string => {
         if (!wordtyping) return "";
-        const lastone = wordtyping.length - 1;
-        if (i === lastone && isIn) return "animate-pulse border-b-2 text-blue-400";
-        if (word[i] === wordtyping[i]) return "text-green-500"; 
+        if (word[i] === wordtyping[i]) return "text-green-500";
         return "text-red-500"
+    }
+
+    const bar = (i: number) => {
+        if (!wordtyping) return "";
+        const lastone = wordtyping.length - 1;
+        if (i === lastone && isIn) return "relative animate-pulse after:content-[''] after:absolute after:right-0 after:top-[10%] after:h-[80%] after:border-r after:border-white";
+        return "";
     }
 
     useEffect(() => {
@@ -32,8 +37,12 @@ export default function WordIlustration({ word, wordtyping, goodOnes, isIn }: Wo
             goodOnes(prev => prev + 1);
         } else {
             goodOnes(prev => prev - 1);
-        }   
+        }
     }, [isGood]);
+
+    const barwithnoletter= () => {
+        if (isIn && !wordtyping) return " animate-pulse border-r border-white  h-10";
+    }
 
 
     return (
@@ -42,16 +51,18 @@ export default function WordIlustration({ word, wordtyping, goodOnes, isIn }: Wo
 
                 <div className={`flex`}>
                     {word.split('').map((w, index) =>
-                        <div className={`flex justify-center items-center content-center px-0.5 text-3xl font-bold  text-white`} key={index}>{w}</div>
+                        <div className={`flex justify-center items-center content-center px-0.5 text-3xl font-bold  text-white `} key={index}>{w}</div>
                     )}
                 </div>
 
 
 
                 <div className={`flex mt-2 min-h-15`}>
-                    {wordtyping?.split('').map((w, index) =>
-                        <div className={`flex justify-center items-center content-center px-0.5 text-3xl font-bold text-black transition-colors duration-200  ${changeColor(index)} `} key={index}>{w}</div>
-                    )}
+                    {wordtyping ? wordtyping?.split('').map((w, index) =>
+                        <div className={`flex justify-center items-center content-center px-0.5 text-3xl font-bold text-black transition-colors  ${bar(index)} ${changeColor(index)} `} key={index}>{w}</div>
+                    ) : <div className={`flex justify-center items-center px-0.5 text-3xl font-bold text-black relative`}>
+                            <span className={`${barwithnoletter()}`}/>
+                        </div>}
                 </div>
 
             </div>
