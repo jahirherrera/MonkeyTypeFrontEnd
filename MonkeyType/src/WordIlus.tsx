@@ -2,7 +2,7 @@ import type { WordIlustrationprops } from './vite-env';
 import { useEffect, useState } from 'react';
 
 
-export default function WordIlustration({ word, wordtyping, goodOnes, isIn }: WordIlustrationprops) {
+export default function WordIlustration({ word, wordtyping, isIn, start }: WordIlustrationprops) {
 
     const [isGood, setIsGood] = useState<boolean>(false);
 
@@ -10,7 +10,7 @@ export default function WordIlustration({ word, wordtyping, goodOnes, isIn }: Wo
     const changeColor = (i: number): string => {
         if (!wordtyping) return "";
         if (word[i] === wordtyping[i]) return "text-green-500";
-        return "text-red-500"
+        return "text-red-500 "
     }
 
     const bar = (i: number) => {
@@ -22,6 +22,7 @@ export default function WordIlustration({ word, wordtyping, goodOnes, isIn }: Wo
 
     useEffect(() => {
         if (!wordtyping) return;
+        start(true);
         if (word === wordtyping) {
             setIsGood(!isGood);
         }
@@ -31,14 +32,6 @@ export default function WordIlustration({ word, wordtyping, goodOnes, isIn }: Wo
         }
     }, [wordtyping]);
 
-    useEffect(() => {
-        if (!wordtyping) return;
-        if (isGood) {
-            goodOnes(prev => prev + 1);
-        } else {
-            goodOnes(prev => prev - 1);
-        }
-    }, [isGood]);
 
     const barwithnoletter= () => {
         if (isIn && !wordtyping) return " animate-pulse border-r border-white  h-10";
