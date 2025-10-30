@@ -1,4 +1,7 @@
 import WordIlustration from './WordIlus'
+//@ts-ignore
+import sprite from './sprite.svg';
+//@ts-ignore
 import './App.css'
 import { useRef, useEffect, useState, use } from 'react';
 
@@ -62,11 +65,11 @@ function App() {
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const firstScroll = useRef(true);
-  const scrollAmount = 8;
+  const scrollAmount = 12;
 
 
   useEffect(() => {
-    if (firstScroll.current || goodOnes < 9) {
+    if (firstScroll.current || goodOnes < 13) {
       firstScroll.current = false;
       return;
     }
@@ -236,7 +239,7 @@ function App() {
   }, [lenguage]);
   return (
     <>
-      <div className="grid grid-rows-[2fr_6fr] justify-center items-center content-center h-screen w-full bg-[#212830]">
+      <div className="grid grid-rows-[4fr_12fr_1fr] justify-center items-center content-center h-screen w-full bg-[#212830]">
         <section className="grid grid-rows-3 justify-around items-end min-h-full ">
           <div className="flex justify-center items-center ">
             <h1 className="text-4xl text-[#41ce5c] h-14">Monkeytype</h1>
@@ -258,15 +261,15 @@ function App() {
 
             {mode === "time" ? (
               <div className="min-w-50 flex justify-around items-center">
-                <p className={`hover:cursor-pointer ${timeSelected(15)}`} onClick={()=>setTime(15)}>15</p>
-                <p className={`hover:cursor-pointer ${timeSelected(30)}`} onClick={()=>setTime(30)}>30</p>
-                <p className={`hover:cursor-pointer ${timeSelected(60)}`} onClick={()=>setTime(60)}>60</p>
+                <p className={`hover:cursor-pointer ${timeSelected(15)}`} onClick={() => setTime(15)}>15</p>
+                <p className={`hover:cursor-pointer ${timeSelected(30)}`} onClick={() => setTime(30)}>30</p>
+                <p className={`hover:cursor-pointer ${timeSelected(60)}`} onClick={() => setTime(60)}>60</p>
               </div>
             ) : (
               <div className="min-w-50 flex justify-around items-center">
-                <p className={`hover:cursor-pointer ${wordSelected(10)}`} onClick={()=>setWord(10)}>10</p>
-                <p className={`hover:cursor-pointer ${wordSelected(25)}`} onClick={()=>setWord(25)}>25</p>
-                <p className={`hover:cursor-pointer ${wordSelected(50)}`} onClick={()=>setWord(50)}>50</p>
+                <p className={`hover:cursor-pointer ${wordSelected(10)}`} onClick={() => setWord(10)}>10</p>
+                <p className={`hover:cursor-pointer ${wordSelected(25)}`} onClick={() => setWord(25)}>25</p>
+                <p className={`hover:cursor-pointer ${wordSelected(50)}`} onClick={() => setWord(50)}>50</p>
               </div>
             )}
           </div>
@@ -279,7 +282,7 @@ function App() {
         </section>
 
         <section
-          className="flex flex-wrap justify-center items-center gap-2 mt-20 w-350 max-h-100 min-h-100 overflow-hidden transform transition-transform duration-300 ease-in-out"
+          className="flex border-t border-b border-white flex-wrap justify-center items-center gap-2 mt-20 w-350 max-h-100 min-h-100 overflow-hidden transform ttransition-all duration-[1500ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
           ref={containerRef}
         >
           {arrayofwords.map((word, i) => (
@@ -301,6 +304,26 @@ function App() {
           />
         </section>
 
+        <footer className="flex justify-center items-center w-full rounded-2xl  m-1">
+          <div className='flex w-40 rounded-2xl bg-gray-900 justify-around items-center '>
+            <a href="https://github.com/jahirherrera/ChatAppFrontend"
+              target="_blank"
+              rel="noreferrer">
+              <svg width="30" height="30" className="hover:cursor-pointer m-1">
+                <use href={`${sprite}#gitlogin`} />
+              </svg>
+            </a>
+            <svg width="26" height="26" className="hover:cursor-pointer m-1">
+              <use href={`${sprite}#score`} />
+            </svg>
+            <svg width="26" height="26" className="hover:cursor-pointer m-1">
+              <use href={`${sprite}#info`} />
+            </svg>
+          </div>
+
+
+        </footer>
+
         {showResults && (
           <div className='fixed top-0 left-0 w-full h-full bg-gray-900/80 flex justify-center items-center text-white '>
             <div className='bg-gradient-to-tl from-gray-900 to-sky-900 p-4 rounded-lg w-100 h-100 flex flex-col justify-center items-center border-4 border-white'>
@@ -316,6 +339,8 @@ function App() {
             </div>
           </div>
         )}
+
+
       </div>
     </>
   );
