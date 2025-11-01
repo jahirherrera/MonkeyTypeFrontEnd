@@ -5,5 +5,14 @@ export interface WordIlustrationprops {
     start: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
+export interface UserWithScore {
+    username: string;
+    maxValue: number;
+}
+
+export interface User {
+    username: string;
+    password: string;
+}
 
 declare module '*.css';

@@ -3,7 +3,9 @@ import WordIlustration from './WordIlus'
 import sprite from './sprite.svg';
 //@ts-ignore
 import './App.css'
-import { useRef, useEffect, useState, use } from 'react';
+import { useRef, useEffect, useState } from 'react';
+import type { UserWithScore, User } from './vite-env';
+import { motion, AnimatePresence } from "framer-motion";
 
 function App() {
   // JavaScript, Java, Python
@@ -43,11 +45,25 @@ function App() {
     "append", "extend", "insert", "remove", "pop", "clear", "copy", "keys", "values", "items", "update"
   ]];
 
+  useEffect(() => {
+    if (localStorage.getItem('conected') === null) {
+      localStorage.setItem('conected', 'false');
+    }
+  }, []);
+
   const [state, setState] = useState({
     typing: "",
     index: 0,
     writing: [] as string[],
   });
+
+  const [username, setUsername] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+
+  const [showLogin, setShowLogin] = useState<boolean>(false);
+
+  const [userScores, setUserScores] = useState<UserWithScore[]>([]);
+  const [showUSerScores, setShowUserScores] = useState<boolean>(false);
 
   const [arrayofwords, setArrayofwords] = useState<string[]>([]);
   const [goodOnes, setGoodOnes] = useState<number>(0);
@@ -200,8 +216,32 @@ function App() {
     resetTest();
   }
 
+  useEffect(() => {
+    if(localStorage.getItem('conected')==='false' || goodOnes === 0) return;
+    sendValue();
+  }, [showResults]);
 
 
+  const sendValue = async () => {
+
+    const value = results();
+    try {
+      const response = await fetch('http://localhost:8080/addScore', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ value: value }),
+      });
+      if (!response.ok) {
+        console.error('Network response was not ok');
+      }
+      console.log("Value sent successfully");
+    } catch (error) {
+      console.error("Error sending value:", error);
+    }
+  }
 
 
   function resetTest() {
@@ -218,7 +258,32 @@ function App() {
     if (mode === "time") {
       return Math.floor(goodOnes / (time / 60));
     } else {
-      return Math.floor(goodOnes / ((secW - 1) / 60));
+      return Math.floor((goodOnes) / ((secW - 1) / 60));
+    }
+  }
+
+  function raw(): number {
+    if (mode === "time") {
+      return Math.floor(state.index / (time / 60));
+    } else {
+      return Math.floor((state.index) / ((secW - 1) / 60));
+    }
+  }
+
+  const getUSerScores = async () => {
+    try {
+      const response = await fetch('http://localhost:8080/getResults', {
+        method: 'GET',
+      });
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const data: UserWithScore[] = await response.json();
+      setUserScores(data);
+      setShowUserScores(true);
+    } catch (error) {
+      console.error("Error fetching user scores:", error);
     }
   }
 
@@ -237,10 +302,51 @@ function App() {
   useEffect(() => {
     if (mode === "time") { settingTime(time) } else { settingWord(word) }
   }, [lenguage]);
+
+  const handleLogin = async () => {
+
+    const user: User = {
+      username: username,
+      password: password
+    }
+
+    try {
+      const response = await fetch('http://localhost:8080/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(user),
+      });
+      if (!response.ok) {
+        throw new Error('Something went wrong during login');
+      }
+
+      const data = await response.text();
+      console.log(data);
+      localStorage.setItem('conected', 'true');
+      setShowLogin(false);
+      setUsername("");
+      setPassword("");
+
+
+    } catch (error) {
+      console.error("Error during login:", error);
+    }
+  }
+  
+  
+
   return (
     <>
       <div className="grid grid-rows-[4fr_12fr_1fr] justify-center items-center content-center h-screen w-full bg-[#212830]">
         <section className="grid grid-rows-3 justify-around items-end min-h-full ">
+          <button onClick={() => setShowLogin(true)} className="absolute top-4 right-4 bg-[#41ce5c] text-white px-2 py-1 rounded hover:cursor-pointer hover:bg-green-600 hover:scale-105 transition-all duration-300 ease-in-out shadow-xl/40">
+            Login
+          </button>
+
+
           <div className="flex justify-center items-center ">
             <h1 className="text-4xl text-[#41ce5c] h-14">Monkeytype</h1>
           </div>
@@ -313,7 +419,7 @@ function App() {
                 <use href={`${sprite}#gitlogin`} />
               </svg>
             </a>
-            <svg width="26" height="26" className="hover:cursor-pointer m-1">
+            <svg width="26" height="26" className="hover:cursor-pointer m-1" onClick={getUSerScores}>
               <use href={`${sprite}#score`} />
             </svg>
             <svg width="26" height="26" className="hover:cursor-pointer m-1">
@@ -325,20 +431,184 @@ function App() {
         </footer>
 
         {showResults && (
-          <div className='fixed top-0 left-0 w-full h-full bg-gray-900/80 flex justify-center items-center text-white '>
-            <div className='bg-gradient-to-tl from-gray-900 to-sky-900 p-4 rounded-lg w-100 h-100 flex flex-col justify-center items-center border-4 border-white'>
-              <h2 className='text-2xl mb-4'>Results</h2>
-              <p className='text-4xl'>WPM: {results()}</p>
-              <button
-                className='mt-4 px-4 py-2 text-white text-xl'
-                onClick={() => { setShowResults(false); if (mode === "time") { settingTime(time) } else { settingWord(word) } }}
-              >
-                &#x21ba;
-              </button>
+          <div className='fixed top-0 left-0 w-full h-full bg-gray-900/80 flex justify-center items-center text-white  '>
+            <div className='w-110 h-80 grid grid-rows-[1fr_4fr] rounded-2xl shadow-xl/40 overflow-hidden'>
+
+              <div className='p-3 bg-sky-900 flex justify-between items-center rounded-t-2xl'>
+                <h1 className='text-xl'>MONKEYTYPE</h1>
+
+                <svg width="30" height="30" className="m-1">
+                  <use href={`${sprite}#monkey`} />
+                </svg>
+
+              </div>
+
+              <div className='bg-gray-900 flex flex-col justify-around  rounded-b-2xl '>
+                <div className='flex justify-around items-center '>
+                  <div>
+                    <p className='text-white text-xl'>WPM</p>
+                    <p className='text-4xl text-[#41ce5c] '>{results()}</p>
+                    <p className='text-gray-500 m-1'>words per minute</p>
+                  </div>
+                  <div className='flex flex-col justify-center items-start'>
+                    <p className='text-white text-xl'>Accuracy</p>
+                    <p className='text-4xl text-[#41ce5c]'>{Math.floor((goodOnes / (state.index === 0 ? 1 : state.index)) * 100)}%</p>
+                    <p className='text-gray-500 m-1'>correct words</p>
+                  </div>
+                </div>
+
+                <p className='min-w-full border border-gray-700'></p>
+
+                <div className='flex justify-around items-center w-full '>
+                  <p className='text-white text-xl'>Raw</p>
+                  <p className='text-white text-xl'>{raw()}</p>
+                </div>
+
+                <div className='flex justify-around items-center w-full '>
+                  <p className='text-white text-xl'>Time</p>
+                  <p className='text-white text-xl'>{mode === "time" ? time : secW - 1}s</p>
+                </div>
+
+                <p className='min-w-full border border-gray-700'></p>
+
+                <button
+                  className=' text-white text-xl hover:cursor-pointer mx-auto'
+                  onClick={() => { setShowResults(false); if (mode === "time") { settingTime(time) } else { settingWord(word) } }}
+                >
+                  &#x21ba;
+                </button>
+              </div>
+
+
 
             </div>
           </div>
         )}
+
+        <AnimatePresence>
+          {showUSerScores &&
+            <motion.div
+              key="backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              className="fixed top-0 left-0 w-full h-full bg-gray-900/80 flex justify-center items-center text-white"
+            >
+              <motion.div
+                key="scores-modal"
+                initial={{ scale: 0.6, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.6, opacity: 0 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+                className='w-100 h-150 grid grid-rows-[1fr_8fr] rounded-2xl shadow-xl/40 overflow-hidden'
+              >
+                <div className='p-3 bg-sky-900 flex justify-between items-center rounded-t-2xl'>
+                  <h1 className='text-xl'>LEADERBOARD</h1>
+
+                  <svg width="30" height="30" className="m-1 hover:cursor-pointer" onClick={() => setShowUserScores(false)}>
+                    <use href={`${sprite}#monkey`} />
+                  </svg>
+
+                </div>
+
+                <div className='bg-gray-900 flex flex-col rounded-b-2xl overflow-y-auto '>
+
+                  <div className=' flex justify-between items-center w-full border-b border-gray-700 p-3 max-h-10'>
+                    <p className='text-white text-2xl'>User</p>
+                    <p className='text-white text-2xl'>Score</p>
+                  </div>
+
+                  {
+                    userScores.map((user, index) => (
+                      <div key={index} className='flex justify-between items-center w-full border-b border-gray-700 p-3 max-h-8'>
+                        <p className='text-white text-lg'>{index + 1}. {user.username}</p>
+                        <p className='text-[#41ce5c] text-lg'>{user.maxValue}</p>
+                      </div>
+                    ))
+                  }
+
+                </div>
+
+              </motion.div>
+            </motion.div>
+
+          }
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {showLogin &&
+            <motion.div
+              key="backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              className="fixed top-0 left-0 w-full h-full bg-gray-900/80 flex justify-center items-center text-white"
+            >
+              <motion.div
+                key="scores-modal"
+                initial={{ scale: 0.6, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.6, opacity: 0 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+                className='w-100 h-110 grid grid-rows-[1fr_8fr] rounded-2xl shadow-xl/40 overflow-hidden'
+              >
+                <div className='p-3 bg-sky-900 flex justify-between items-center rounded-t-2xl'>
+                  <h1 className='text-xl'>LOGIN</h1>
+
+                  <svg width="30" height="30" className="m-1 hover:cursor-pointer" onClick={() => setShowLogin(false)}>
+                    <use href={`${sprite}#monkey`} />
+                  </svg>
+
+                </div>
+
+                <div className='bg-gray-900 flex flex-col rounded-b-2xl overflow-y-auto '>
+
+                  <div className='flex flex-col p-3'>
+                    <h1 className='text-xl mb-1'>Username</h1>
+                    <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} className='bg-gray-700 rounded-lg p-1 text-white w-auto' />
+                  </div>
+
+                  <div className='flex flex-col p-3'>
+                    <h1 className='text-xl mb-1'>Password</h1>
+                    <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className='bg-gray-700 rounded-lg p-1 text-white w-auto' />
+                    <p className='text-xs m-1'>Forgot Password?</p>
+                  </div>
+
+                  <button onClick={handleLogin} className='bg-sky-900 w-20 flex justify-center items-center mx-auto rounded-lg p-2 hover:cursor-pointer hover:bg-sky-700 transition-all duration-200 ease-in-out '>
+                    Log in
+                  </button>
+
+                  <div className='flex justify-center items-center mt-3'>
+                    New here? <p className="underline pl-1 hover:cursor-pointer">Create an account</p>
+                  </div>
+
+
+
+                  <div className='flex flex-col justify-center items-center mt-5'>
+                    <div className='flex justify-around w-40 items-center mt-2'>
+                      <svg width="28" height="28" className="hover:cursor-pointer " >
+                        <use href={`${sprite}#github`} />
+                      </svg>
+                      <svg width="19" height="19" className="hover:cursor-pointer ">
+                        <use href={`${sprite}#x`} />
+                      </svg>
+                      <svg width="26" height="26" className="hover:cursor-pointer">
+                        <use href={`${sprite}#google`} />
+                      </svg>
+                    </div>
+                  </div>
+
+
+                </div>
+
+              </motion.div>
+            </motion.div>
+
+          }
+        </AnimatePresence>
+
 
 
       </div>
