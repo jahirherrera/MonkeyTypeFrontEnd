@@ -46,9 +46,21 @@ function App() {
   ]];
 
   useEffect(() => {
-    if (localStorage.getItem('conected') === null) {
-      localStorage.setItem('conected', 'false');
+    try {
+      fetch('http://localhost:8080/logged', { credentials: 'include' })
+        .then(req => {
+          if (!req.ok) {
+            setConnected(false);
+            return;
+          }
+          return req.json();
+        })
+        .then(data =>setConnected(data))
+
+    } catch (e) {
+      setConnected(false);
     }
+
   }, []);
 
   const [state, setState] = useState({
@@ -56,6 +68,8 @@ function App() {
     index: 0,
     writing: [] as string[],
   });
+
+  const [connected, setConnected] = useState<boolean>(false);
 
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
@@ -217,7 +231,7 @@ function App() {
   }
 
   useEffect(() => {
-    if(localStorage.getItem('conected')==='false' || goodOnes === 0) return;
+    if (!connected || goodOnes === 0) return;
     sendValue();
   }, [showResults]);
 
@@ -228,7 +242,7 @@ function App() {
     try {
       const response = await fetch('http://localhost:8080/addScore', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
@@ -237,7 +251,6 @@ function App() {
       if (!response.ok) {
         console.error('Network response was not ok');
       }
-      console.log("Value sent successfully");
     } catch (error) {
       console.error("Error sending value:", error);
     }
@@ -324,8 +337,7 @@ function App() {
       }
 
       const data = await response.text();
-      console.log(data);
-      localStorage.setItem('conected', 'true');
+      setConnected(true);
       setShowLogin(false);
       setUsername("");
       setPassword("");
@@ -335,15 +347,39 @@ function App() {
       console.error("Error during login:", error);
     }
   }
-  
-  
+
+  const goToGoogle = () => {
+    window.location.href = "http://localhost:8080/oauth2/authorization/google";
+    setConnected(true);
+  }
+
+  const loggingout = async () => {
+    try {
+      const response = await fetch("http://localhost:8080/userLogOut", {
+        method: 'POST',
+        credentials: 'include'
+      })
+      if (!response.ok) {
+        setConnected(false)
+      }
+
+      setConnected(false);
+
+
+
+    } catch (e) {
+      console.error("somehting went wrong")
+    }
+
+  }
+
 
   return (
     <>
       <div className="grid grid-rows-[4fr_12fr_1fr] justify-center items-center content-center h-screen w-full bg-[#212830]">
         <section className="grid grid-rows-3 justify-around items-end min-h-full ">
-          <button onClick={() => setShowLogin(true)} className="absolute top-4 right-4 bg-[#41ce5c] text-white px-2 py-1 rounded hover:cursor-pointer hover:bg-green-600 hover:scale-105 transition-all duration-300 ease-in-out shadow-xl/40">
-            Login
+          <button onClick={() => { connected ? loggingout() : setShowLogin(true) }} className="absolute top-4 right-4 bg-[#41ce5c] text-white px-2 py-1 rounded hover:cursor-pointer hover:bg-green-600 hover:scale-105 transition-all duration-300 ease-in-out shadow-xl/40">
+            {connected ? 'logout' : 'login'}
           </button>
 
 
@@ -594,7 +630,7 @@ function App() {
                       <svg width="19" height="19" className="hover:cursor-pointer ">
                         <use href={`${sprite}#x`} />
                       </svg>
-                      <svg width="26" height="26" className="hover:cursor-pointer">
+                      <svg width="26" height="26" className="hover:cursor-pointer" onClick={goToGoogle}>
                         <use href={`${sprite}#google`} />
                       </svg>
                     </div>
