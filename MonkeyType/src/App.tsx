@@ -4,8 +4,9 @@ import sprite from './sprite.svg';
 //@ts-ignore
 import './App.css'
 import { useRef, useEffect, useState } from 'react';
-import type { UserWithScore, User } from './vite-env';
+import type { UserWithScore, User, creatingUser } from './vite-env';
 import { motion, AnimatePresence } from "framer-motion";
+import Colors from './colors';
 
 function App() {
   // JavaScript, Java, Python
@@ -55,11 +56,13 @@ function App() {
           }
           return req.json();
         })
-        .then(data =>setConnected(data))
+        .then(data => setConnected(data))
 
     } catch (e) {
       setConnected(false);
     }
+
+    setTheme(localStorage.getItem('themeSelected') || "")
 
   }, []);
 
@@ -69,7 +72,20 @@ function App() {
     writing: [] as string[],
   });
 
+  const [showRegister, setShowRegister] = useState<boolean>(false);
+
+  const [showInfo, setShowInfo] = useState<boolean>(false);
+
+  const [theme, setTheme] = useState<string>("");
+  const [showTheme, setShowTheme] = useState<boolean>(false)
+
   const [connected, setConnected] = useState<boolean>(false);
+
+  const [fullname, setFullname] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
+  const [usernameR, setUsernameR] = useState<string>("");
+  const [passwordR, setPasswordR] = useState<string>("");
+  const [message, setMessage] = useState<string>("");
 
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
@@ -96,6 +112,8 @@ function App() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const firstScroll = useRef(true);
   const scrollAmount = 12;
+
+  const arrayColor = ["default", "red", "purple", "yellow", "blue", "ocean", "cake"]
 
 
   useEffect(() => {
@@ -342,7 +360,6 @@ function App() {
       setUsername("");
       setPassword("");
 
-
     } catch (error) {
       console.error("Error during login:", error);
     }
@@ -373,28 +390,96 @@ function App() {
 
   }
 
+  const changeTheme = (str: string) => {
+    setTheme(str);
+    localStorage.setItem('themeSelected', str);
+  }
+
+  const createUser = async () => {
+
+    if(fullname === "" || usernameR === "" || passwordR ==="" || email ===""){
+      setMessage("Fields cannot be empty");
+      return
+    }
+
+    if(!email.includes("@") || !email.includes(".")){
+      setMessage("Enter a valid Email");
+      return;
+    }
+
+    const user: creatingUser = {
+      fullname: fullname,
+      username: usernameR,
+      password: passwordR,
+      email: email,
+    }
+
+    try {
+      const response = await fetch('http://localhost:8080/addUser', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(user),
+      });
+      if (!response.ok) {
+        throw new Error('Something went wrong during login');
+      }
+
+
+
+      const data = await response.text();
+
+      if (data === "success") {
+        setShowRegister(false);
+        setShowLogin(true);
+        setUsernameR("");
+        setPasswordR("");
+        setFullname("");
+        setEmail("");
+        setMessage("")
+        alert("User create successfully")
+      }
+
+      setMessage(data);
+
+
+    } catch (error) {
+      console.error("Error during login:", error);
+    }
+
+  }
+
 
   return (
     <>
-      <div className="grid grid-rows-[4fr_12fr_1fr] justify-center items-center content-center h-screen w-full bg-[#212830]">
-        <section className="grid grid-rows-3 justify-around items-end min-h-full ">
-          <button onClick={() => { connected ? loggingout() : setShowLogin(true) }} className="absolute top-4 right-4 bg-[#41ce5c] text-white px-2 py-1 rounded hover:cursor-pointer hover:bg-green-600 hover:scale-105 transition-all duration-300 ease-in-out shadow-xl/40">
-            {connected ? 'logout' : 'login'}
-          </button>
+      <div className={`grid grid-rows-[4fr_12fr_1fr] justify-center items-center content-center h-screen w-full bg-[var(--bg)] ${theme}`}>
+        <header className="grid grid-rows-3 justify-around items-end min-h-full ">
+          <div className="absolute top-4 right-4  px-2 py-1 rounded flex">
+
+            <svg width="26" height="26" className="hover:cursor-pointer m-1 text-[var(--title)] mr-3" onClick={() => setShowTheme(true)}>
+              <use href={`${sprite}#theme`} />
+            </svg>
+
+            <button onClick={() => { connected ? loggingout() : setShowLogin(true) }} className=" bg-[var(--title)] text-white px-2 py-1 rounded hover:cursor-pointer hover:bg-[var(--title)]/90 hover:scale-105 transition-all duration-300 ease-in-out shadow-xl/40">
+              {connected ? 'logout' : 'login'}
+            </button>
+          </div>
+
 
 
           <div className="flex justify-center items-center ">
-            <h1 className="text-4xl text-[#41ce5c] h-14">Monkeytype</h1>
+            <h1 className="text-4xl text-[var(--title)] h-14">Monkeytype</h1>
           </div>
 
-          <div className="w-200 h-14 bg-gray-900 rounded-3xl flex justify-around items-center">
+          <div className="w-200 h-14 bg-[var(--bar)] rounded-3xl flex justify-around items-center">
             <div className="flex justify-around items-center w-50">
               <button className={`${methodSelected("time")} hover:cursor-pointer`} onClick={() => { method("time"); settingTime(15) }}>Time</button>
               <button className={`${methodSelected("words")} hover:cursor-pointer`} onClick={() => { method("words"); settingWord(10) }}>Words</button>
             </div>
 
             <div>
-              <select className="p-1 bg-gray-900 text-white hover:cursor-pointer" onChange={(e) => setLenguage(parseInt(e.target.value))}>
+              <select className="p-1 bg-[var(--bar)] text-white hover:cursor-pointer" onChange={(e) => setLenguage(parseInt(e.target.value))}>
                 <option value={0} >JavaScript</option>
                 <option value={1} >Java</option>
                 <option value={2} >Python</option>
@@ -421,7 +506,7 @@ function App() {
               {secT}
             </h1>
           )}
-        </section>
+        </header>
 
         <section
           className="flex border-t border-b border-white flex-wrap justify-center items-center gap-2 mt-20 w-350 max-h-100 min-h-100 overflow-hidden transform ttransition-all duration-[1500ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
@@ -438,6 +523,7 @@ function App() {
           ))}
           <input
             autoFocus
+            disabled={showResults}
             type="text"
             className="absolute w-350 size-auto text-3xl opacity-0 h-150 bg-amber-50"
             value={state.typing}
@@ -447,18 +533,18 @@ function App() {
         </section>
 
         <footer className="flex justify-center items-center w-full rounded-2xl  m-1">
-          <div className='flex w-40 rounded-2xl bg-gray-900 justify-around items-center '>
+          <div className='flex w-40 rounded-2xl bg-[var(--bar)] justify-around items-center '>
             <a href="https://github.com/jahirherrera/ChatAppFrontend"
               target="_blank"
               rel="noreferrer">
-              <svg width="30" height="30" className="hover:cursor-pointer m-1">
+              <svg width="30" height="30" className="hover:cursor-pointer m-1 text-[var(--icons)]">
                 <use href={`${sprite}#gitlogin`} />
               </svg>
             </a>
-            <svg width="26" height="26" className="hover:cursor-pointer m-1" onClick={getUSerScores}>
+            <svg width="26" height="26" className="hover:cursor-pointer m-1 text-[var(--icons)]" onClick={getUSerScores}>
               <use href={`${sprite}#score`} />
             </svg>
-            <svg width="26" height="26" className="hover:cursor-pointer m-1">
+            <svg width="26" height="26" className="hover:cursor-pointer m-1 text-[var(--icons)]" onClick={() => setShowInfo(true)}>
               <use href={`${sprite}#info`} />
             </svg>
           </div>
@@ -470,7 +556,7 @@ function App() {
           <div className='fixed top-0 left-0 w-full h-full bg-gray-900/80 flex justify-center items-center text-white  '>
             <div className='w-110 h-80 grid grid-rows-[1fr_4fr] rounded-2xl shadow-xl/40 overflow-hidden'>
 
-              <div className='p-3 bg-sky-900 flex justify-between items-center rounded-t-2xl'>
+              <div className='p-3 bg-[var(--bar)] flex justify-between items-center rounded-t-2xl'>
                 <h1 className='text-xl'>MONKEYTYPE</h1>
 
                 <svg width="30" height="30" className="m-1">
@@ -521,6 +607,54 @@ function App() {
           </div>
         )}
 
+        {/* Color themes */}
+        <AnimatePresence>
+          {showTheme &&
+            <motion.div
+              key="backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              className="fixed top-0 left-0 w-full h-full bg-gray-900/80 flex justify-center items-center text-white"
+            >
+              <motion.div
+                key="scores-modal"
+                initial={{ scale: 0.6, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.6, opacity: 0 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+                className='w-100 h-150 grid grid-rows-[1fr_8fr] rounded-2xl shadow-xl/40 overflow-hidden'
+              >
+                <div className='p-3 bg-[var(--bar)] flex justify-between items-center rounded-t-2xl'>
+                  <h1 className='text-xl'>Themes</h1>
+
+                  <svg width="30" height="30" className="m-1 hover:cursor-pointer" onClick={() => setShowTheme(false)}>
+                    <use href={`${sprite}#monkey`} />
+                  </svg>
+
+                </div>
+
+                <div className='bg-gray-900  rounded-b-2xl '>
+
+                  <div className='w-auto grid grid-cols-2 justify-items-center'>
+                    {
+                      arrayColor.map((c, index) => (
+                        <Colors key={index} color={c} selected={changeTheme} />
+                      ))
+                    }
+                  </div>
+
+                </div>
+
+              </motion.div>
+            </motion.div>
+
+          }
+        </AnimatePresence>
+
+
+        {/* ScoreBoard */}
         <AnimatePresence>
           {showUSerScores &&
             <motion.div
@@ -539,7 +673,7 @@ function App() {
                 transition={{ duration: 0.3, ease: "easeOut" }}
                 className='w-100 h-150 grid grid-rows-[1fr_8fr] rounded-2xl shadow-xl/40 overflow-hidden'
               >
-                <div className='p-3 bg-sky-900 flex justify-between items-center rounded-t-2xl'>
+                <div className='p-3 bg-[var(--bar)] flex justify-between items-center rounded-t-2xl'>
                   <h1 className='text-xl'>LEADERBOARD</h1>
 
                   <svg width="30" height="30" className="m-1 hover:cursor-pointer" onClick={() => setShowUserScores(false)}>
@@ -559,7 +693,7 @@ function App() {
                     userScores.map((user, index) => (
                       <div key={index} className='flex justify-between items-center w-full border-b border-gray-700 p-3 max-h-8'>
                         <p className='text-white text-lg'>{index + 1}. {user.username}</p>
-                        <p className='text-[#41ce5c] text-lg'>{user.maxValue}</p>
+                        <p className='text-[var(--title)] text-lg'>{user.maxValue}</p>
                       </div>
                     ))
                   }
@@ -572,6 +706,8 @@ function App() {
           }
         </AnimatePresence>
 
+
+        {/* Login */}
         <AnimatePresence>
           {showLogin &&
             <motion.div
@@ -590,7 +726,7 @@ function App() {
                 transition={{ duration: 0.3, ease: "easeOut" }}
                 className='w-100 h-110 grid grid-rows-[1fr_8fr] rounded-2xl shadow-xl/40 overflow-hidden'
               >
-                <div className='p-3 bg-sky-900 flex justify-between items-center rounded-t-2xl'>
+                <div className='p-3 bg-[var(--bar)] flex justify-between items-center rounded-t-2xl'>
                   <h1 className='text-xl'>LOGIN</h1>
 
                   <svg width="30" height="30" className="m-1 hover:cursor-pointer" onClick={() => setShowLogin(false)}>
@@ -609,15 +745,15 @@ function App() {
                   <div className='flex flex-col p-3'>
                     <h1 className='text-xl mb-1'>Password</h1>
                     <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className='bg-gray-700 rounded-lg p-1 text-white w-auto' />
-                    <p className='text-xs m-1'>Forgot Password?</p>
+                    <p className='text-xs m-1 hover:cursor-pointer'>Forgot Password?</p>
                   </div>
 
-                  <button onClick={handleLogin} className='bg-sky-900 w-20 flex justify-center items-center mx-auto rounded-lg p-2 hover:cursor-pointer hover:bg-sky-700 transition-all duration-200 ease-in-out '>
+                  <button onClick={handleLogin} className='bg-[var(--bar)] w-20 flex justify-center items-center mx-auto rounded-lg p-2 hover:cursor-pointer hover:bg-[var(--bar)]/90 transition-all duration-200 ease-in-out '>
                     Log in
                   </button>
 
                   <div className='flex justify-center items-center mt-3'>
-                    New here? <p className="underline pl-1 hover:cursor-pointer">Create an account</p>
+                    New here? <p className="underline pl-1 hover:cursor-pointer" onClick={() => { setShowLogin(false); setShowRegister(true) }}>Create an account</p>
                   </div>
 
 
@@ -637,6 +773,121 @@ function App() {
                   </div>
 
 
+                </div>
+
+              </motion.div>
+            </motion.div>
+
+          }
+        </AnimatePresence>
+
+
+        {/* Register*/}
+        <AnimatePresence>
+          {showRegister &&
+            <motion.div
+              key="backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              className="fixed top-0 left-0 w-full h-full bg-gray-900/80 flex justify-center items-center text-white"
+            >
+              <motion.div
+                key="scores-modal"
+                initial={{ scale: 0.6, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.6, opacity: 0 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+                className='w-100 h-135 grid grid-rows-[1fr_8fr] rounded-2xl shadow-xl/40 overflow-hidden'
+              >
+                <div className='p-3 bg-[var(--bar)] flex justify-between items-center rounded-t-2xl'>
+                  <h1 className='text-xl'>Register</h1>
+
+                  <svg width="30" height="30" className="m-1 hover:cursor-pointer" onClick={() => setShowRegister(false)}>
+                    <use href={`${sprite}#monkey`} />
+                  </svg>
+
+                </div>
+
+                <div className='bg-gray-900 flex flex-col rounded-b-2xl overflow-y-auto '>
+
+
+                  <div className='flex flex-col p-3'>
+                    <h1 className='text-xl mb-1'>Fullname</h1>
+                    <input type="text" value={fullname} onChange={(e) => setFullname(e.target.value)} className='bg-gray-700 rounded-lg p-1 text-white w-auto' />
+                  </div>
+
+                  <div className='flex flex-col p-3'>
+                    <h1 className='text-xl mb-1'>Username</h1>
+                    <input type="text" value={usernameR} onChange={(e) => setUsernameR(e.target.value)} className='bg-gray-700 rounded-lg p-1 text-white w-auto' />
+                  </div>
+
+                  <div className='flex flex-col p-3'>
+                    <h1 className='text-xl mb-1'>Password</h1>
+                    <input type="password" value={passwordR} onChange={(e) => setPasswordR(e.target.value)} className='bg-gray-700 rounded-lg p-1 text-white w-auto' />
+                  </div>
+
+                  <div className='flex flex-col p-3'>
+                    <h1 className='text-xl mb-1'>Email</h1>
+                    <input type="text" value={email} onChange={(e) => setEmail(e.target.value)} className='bg-gray-700 rounded-lg p-1 text-white w-auto' />
+                  </div>
+
+                  <h1 className='flex justify-center items-center text-lg mb-4 min-h-7 text-red-500'>{message}</h1>
+
+                  <button onClick={createUser} className='bg-[var(--bar)] w-20 flex justify-center items-center mx-auto rounded-lg p-2 hover:cursor-pointer hover:bg-[var(--bar)]/90 transition-all duration-200 ease-in-out '>
+                    Create
+                  </button>
+
+                  <h1 onClick={()=>{setShowRegister(false);setShowLogin(true)}} className='flex justify-center items-center text-sm m-1 hover:cursor-pointer'>Already have an account?</h1>
+
+                </div>
+
+              </motion.div>
+            </motion.div>
+
+          }
+        </AnimatePresence>
+
+        {/* Info */}
+        <AnimatePresence>
+          {showInfo &&
+            <motion.div
+              key="backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              className="fixed top-0 left-0 w-full h-full bg-gray-900/80 flex justify-center items-center text-white"
+            >
+              <motion.div
+                key="scores-modal"
+                initial={{ scale: 0.6, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.6, opacity: 0 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+                className='w-100 h-150 grid grid-rows-[1fr_8fr] rounded-2xl shadow-xl/40 overflow-hidden'
+              >
+                <div className='p-3 bg-[var(--bar)] flex justify-between items-center rounded-t-2xl'>
+                  <h1 className='text-xl'>INFO</h1>
+
+                  <svg width="30" height="30" className="m-1 hover:cursor-pointer" onClick={() => setShowInfo(false)}>
+                    <use href={`${sprite}#monkey`} />
+                  </svg>
+
+                </div>
+
+                <div className='bg-gray-900 flex flex-col rounded-b-2xl overflow-y-auto'>
+                  <h1 className='m-4 text-xl'>My Monkeytype app is a fast-paced typing game where new words appear as you type. The goal is to type each word correctly before moving on to the next one. Every time you finish a word, a new one pops up, keeping the challenge continuous and engaging. It’s a fun way to test your typing speed and accuracy while improving your overall typing skills.</h1>
+
+                  <p className='ml-4 text-xl'>Instructions:</p>
+                  <ul className='p-4 text-lg list-decimal list-inside'>
+                    <li>Choose between Time or Words mode.</li>
+                    <li>Select your preferred programming language for the words.</li>
+                    <li>Start typing the words as they appear.</li>
+                    <li>Press space to submit each word.</li>
+                    <li>View your results and compare with others on the leaderboard!</li>
+                  </ul>
                 </div>
 
               </motion.div>

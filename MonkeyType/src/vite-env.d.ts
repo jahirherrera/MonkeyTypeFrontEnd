@@ -15,4 +15,16 @@ export interface User {
     password: string;
 }
 
+export interface colorProps{
+    color : string;
+    selected : (str:string)=>void;
+}
+
+export interface creatingUser{
+    fullname : string;
+    username : string;
+    password : string;
+    email : string;
+}
+
 declare module '*.css';

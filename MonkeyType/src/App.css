@@ -1,1 +1,57 @@
 @import "tailwindcss";
+
+:root {
+    --title:#41ce5c;
+    --bar:#141b23;
+    --bg:#212830;
+    --icons:#41ce5c
+}
+
+.default {
+    --title:#41ce5c;
+    --bar:#141b23;
+    --bg:#212830;
+    --icons:#41ce5c
+}
+
+.red {
+    --title:#D91B24;
+    --bar:#761F21;
+    --bg:#C4C4C4;
+    --icons:#003049;
+}
+
+.blue {
+    --title:#00b4d8;
+    --bar:#0077b6;
+    --bg:#03045e;
+    --icons:#90e0ef;
+}
+
+.purple {
+    --title:#5b2a86;
+    --bar:#7785ac;
+    --bg:#9ac6c5;
+    --icons:#360568;
+}
+
+.yellow { 
+    --title:#ffb703;
+    --bar:#fb8500;
+    --bg:#023047;
+    --icons:#219ebc;
+}
+
+.ocean {
+    --title:#00171f;
+    --bar:#003459;
+    --bg:#007ea7;
+    --icons:#ffffff;
+}
+
+.cake {
+    --title:#4c956c;
+    --bar:#2c6e49;
+    --bg:#ffc9b9;
+    --icons:#fefee3;
+}
