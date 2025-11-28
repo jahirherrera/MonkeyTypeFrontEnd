@@ -27,4 +27,9 @@ export interface creatingUser{
     email : string;
 }
 
+export interface codeDTO{
+    username?: string;
+    code?: string
+}
+
 declare module '*.css';

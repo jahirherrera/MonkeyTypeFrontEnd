@@ -3,10 +3,11 @@ import WordIlustration from './WordIlus'
 import sprite from './sprite.svg';
 //@ts-ignore
 import './App.css'
-import { useRef, useEffect, useState } from 'react';
-import type { UserWithScore, User, creatingUser } from './vite-env';
+import { useRef, useEffect, useState, use } from 'react';
+import type { UserWithScore, User, creatingUser, codeDTO } from './vite-env';
 import { motion, AnimatePresence } from "framer-motion";
 import Colors from './colors';
+import DisappearingDiv from './disapearDiv';
 
 function App() {
   // JavaScript, Java, Python
@@ -72,9 +73,15 @@ function App() {
     writing: [] as string[],
   });
 
+  const [showMessage, setShowMessage] = useState<boolean>(false);
+  const [newMessage, setNewMessage] = useState<string>("");
+
   const [showRegister, setShowRegister] = useState<boolean>(false);
 
   const [showInfo, setShowInfo] = useState<boolean>(false);
+
+  const [showForgot, setShowForgot] = useState<boolean>(false);
+  const [code, setCode] = useState<string>("");
 
   const [theme, setTheme] = useState<string>("");
   const [showTheme, setShowTheme] = useState<boolean>(false)
@@ -370,6 +377,11 @@ function App() {
     setConnected(true);
   }
 
+  const goToGithub = () => {
+    window.location.href = "http://localhost:8080/oauth2/authorization/github";
+    setConnected(true);
+  }
+
   const loggingout = async () => {
     try {
       const response = await fetch("http://localhost:8080/userLogOut", {
@@ -381,6 +393,7 @@ function App() {
       }
 
       setConnected(false);
+      setNewMessage("You have been logged out successfully");
 
 
 
@@ -397,12 +410,12 @@ function App() {
 
   const createUser = async () => {
 
-    if(fullname === "" || usernameR === "" || passwordR ==="" || email ===""){
+    if (fullname === "" || usernameR === "" || passwordR === "" || email === "") {
       setMessage("Fields cannot be empty");
       return
     }
 
-    if(!email.includes("@") || !email.includes(".")){
+    if (!email.includes("@") || !email.includes(".")) {
       setMessage("Enter a valid Email");
       return;
     }
@@ -449,6 +462,80 @@ function App() {
     }
 
   }
+
+  const forgorPassword = async () => {
+
+    const codeDTO: codeDTO = {
+      username: username,
+    }
+    if (username === "") return
+
+    try {
+      const response = await fetch('http://localhost:8080/sendingCode', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(codeDTO),
+      });
+      if (!response.ok) {
+        throw new Error('Something went wrong during sending code');
+      }
+      const data = await response.text();
+      console.log(data);
+      if (data === "Code send!") {
+        setShowLogin(false);
+        setShowForgot(true);
+      }
+
+
+
+    } catch (e) {
+      console.error("something went wrong" + e)
+    }
+
+  }
+
+  const verifyCode = async () => {
+    const codeDTO: codeDTO = {
+      username: username,
+      code: code,
+    }
+    try {
+      const response = await fetch('http://localhost:8080/verifying', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(codeDTO),
+      });
+      if (!response.ok) {
+        throw new Error('Something went wrong during verifying code');
+      }
+      const data = await response.text();
+      if (data === "valid") {
+        setConnected(true);
+        setUsername("");
+        setShowForgot(false);
+        setNewMessage("You are now logged in; Go to SETTINGS to change your password");
+        setCode("");
+        return;
+      }
+
+      console.log(data);
+
+
+    } catch (e) {
+      console.error("something went wrong" + e)
+    }
+  }
+
+  useEffect(() => {
+
+    if (newMessage !== "") {
+      setShowMessage(true);
+    }
+  }, [newMessage]);
 
 
   return (
@@ -745,7 +832,7 @@ function App() {
                   <div className='flex flex-col p-3'>
                     <h1 className='text-xl mb-1'>Password</h1>
                     <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className='bg-gray-700 rounded-lg p-1 text-white w-auto' />
-                    <p className='text-xs m-1 hover:cursor-pointer'>Forgot Password?</p>
+                    <p onClick={forgorPassword} className='text-xs m-1 hover:cursor-pointer'>Forgot Password?</p>
                   </div>
 
                   <button onClick={handleLogin} className='bg-[var(--bar)] w-20 flex justify-center items-center mx-auto rounded-lg p-2 hover:cursor-pointer hover:bg-[var(--bar)]/90 transition-all duration-200 ease-in-out '>
@@ -763,15 +850,65 @@ function App() {
                       <svg width="28" height="28" className="hover:cursor-pointer " >
                         <use href={`${sprite}#github`} />
                       </svg>
-                      <svg width="19" height="19" className="hover:cursor-pointer ">
-                        <use href={`${sprite}#x`} />
-                      </svg>
                       <svg width="26" height="26" className="hover:cursor-pointer" onClick={goToGoogle}>
                         <use href={`${sprite}#google`} />
                       </svg>
                     </div>
                   </div>
 
+
+                </div>
+
+              </motion.div>
+            </motion.div>
+
+          }
+        </AnimatePresence>
+
+        {/* Forgot password */}
+        <AnimatePresence>
+          {showForgot &&
+            <motion.div
+              key="backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              className="fixed top-0 left-0 w-full h-full bg-gray-900/80 flex justify-center items-center text-white"
+            >
+              <motion.div
+                key="scores-modal"
+                initial={{ scale: 0.6, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.6, opacity: 0 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+                className='w-100 h-80 grid grid-rows-[1fr_8fr] rounded-2xl shadow-xl/40 overflow-hidden'
+              >
+                <div className='p-3 bg-[var(--bar)] flex justify-between items-center rounded-t-2xl'>
+                  <h1 className='text-xl'>FORGOT PASSWORD</h1>
+
+                  <svg width="30" height="30" className="m-1 hover:cursor-pointer" onClick={() => setShowForgot(false)}>
+                    <use href={`${sprite}#monkey`} />
+                  </svg>
+
+                </div>
+
+                <div className='bg-gray-900 flex flex-col rounded-b-2xl overflow-y-auto '>
+
+
+                  <h1 className='p-3 text-xl'>
+                    we send a code to the email of this user : {username}
+                  </h1>
+
+                  <div className='flex flex-col p-3'>
+                    <h1 className='text-xl mb-1'>Code </h1>
+                    <input type="text" value={code} onChange={(e) => setCode(e.target.value)} className='bg-gray-700 rounded-lg p-1 text-white w-auto' />
+                  </div>
+
+
+                  <button onClick={verifyCode} className='bg-[var(--bar)] w-20 flex justify-center items-center mx-auto rounded-lg p-2 hover:cursor-pointer hover:bg-[var(--bar)]/90 transition-all duration-200 ease-in-out '>
+                    Enter
+                  </button>
 
                 </div>
 
@@ -839,7 +976,7 @@ function App() {
                     Create
                   </button>
 
-                  <h1 onClick={()=>{setShowRegister(false);setShowLogin(true)}} className='flex justify-center items-center text-sm m-1 hover:cursor-pointer'>Already have an account?</h1>
+                  <h1 onClick={() => { setShowRegister(false); setShowLogin(true) }} className='flex justify-center items-center text-sm m-1 hover:cursor-pointer'>Already have an account?</h1>
 
                 </div>
 
@@ -896,6 +1033,7 @@ function App() {
           }
         </AnimatePresence>
 
+        {showMessage && <DisappearingDiv key={newMessage} text={newMessage} />}
 
 
       </div>
